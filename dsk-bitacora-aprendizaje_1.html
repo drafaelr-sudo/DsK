@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSK — Bitácora de Entrenamiento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F3EEDD;
+    --paper-panel: #ECE5CD;
+    --paper-line: #CFC6A3;
+    --ink: #1E2B22;
+    --ink-muted: #5B6354;
+    --money: #1B5E3F;
+    --money-bright: #2F8F5B;
+    --stamp-red: #9C3B30;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    background-image: repeating-linear-gradient(135deg, rgba(27,94,63,0.025) 0px, rgba(27,94,63,0.025) 1px, transparent 1px, transparent 14px);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+
+  .wrap { max-width: 720px; margin: 0 auto; }
+
+  /* ---------- Certificate header ---------- */
+  .cert {
+    background: var(--paper-panel);
+    border: 3px double var(--money);
+    border-radius: 3px;
+    padding: 26px 26px 22px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .cert-eyebrow {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: 0 0 6px;
+  }
+
+  .cert-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: clamp(40px, 9vw, 58px);
+    line-height: 1;
+    color: var(--money);
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .cert-tagline {
+    font-size: 14px;
+    color: var(--ink-muted);
+    margin: 0;
+    max-width: 38ch;
+  }
+
+  .due-stamp {
+    flex: 0 0 auto;
+    width: 104px;
+    height: 104px;
+    border: 2px dashed var(--stamp-red);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(-7deg);
+    color: var(--stamp-red);
+    text-align: center;
+  }
+
+  .due-stamp .lbl {
+    font-family: 'Courier Prime', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .due-stamp .num {
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.1;
+  }
+
+  .due-stamp .sub {
+    font-family: 'Courier Prime', monospace;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- Balance / progress panel ---------- */
+  .balance {
+    background: var(--paper-panel);
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 18px 20px;
+    margin-bottom: 28px;
+  }
+
+  .balance-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  .balance-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .balance-readout {
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--money);
+  }
+
+  .balance-readout span { color: var(--ink-muted); font-weight: 400; font-size: 14px; }
+
+  .track {
+    height: 8px;
+    background: rgba(27,94,63,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .fill {
+    height: 100%;
+    background: var(--money-bright);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .balance-status {
+    margin-top: 12px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-muted);
+  }
+
+  /* ---------- Weeks (ledger entries) ---------- */
+  .week {
+    background: var(--paper-panel);
+    border: 1px solid var(--paper-line);
+    border-radius: 4px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .week-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+
+  .week-stamp {
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    border: 2px solid var(--stamp-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--stamp-red);
+    transform: rotate(-4deg);
+  }
+
+  .week-titles { display: flex; flex-direction: column; gap: 1px; }
+  .week-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; margin: 0; color: var(--ink); }
+  .week-dates { font-family: 'Courier Prime', monospace; font-size: 11px; color: var(--ink-muted); }
+  .week-count { margin-left: auto; font-family: 'Courier Prime', monospace; font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+
+  .task-list { list-style: none; margin: 0; padding: 6px 8px; }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .task:hover { background: rgba(27,94,63,0.06); }
+
+  .stampbox {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    margin-top: 1px;
+    border: 2px dashed var(--paper-line);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: transparent;
+    transform: rotate(0deg) scale(0.9);
+    transition: all 0.25s ease;
+  }
+
+  .task.done .stampbox {
+    border: 2px solid var(--money-bright);
+    background: rgba(47,143,91,0.14);
+    color: var(--money-bright);
+    transform: rotate(-10deg) scale(1);
+  }
+
+  .task.done .stampbox::after { content: "✓"; }
+
+  .task-body { display: flex; flex-direction: column; gap: 3px; }
+  .task-text { font-size: 14.5px; line-height: 1.4; color: var(--ink); transition: color 0.2s ease, opacity 0.2s ease; }
+  .task-resource { font-family: 'Courier Prime', monospace; font-size: 12px; color: var(--money); opacity: 0.85; }
+
+  .task.done .task-text { color: var(--ink-muted); text-decoration: line-through; text-decoration-color: var(--paper-line); opacity: 0.8; }
+  .task.done .task-resource { opacity: 0.4; text-decoration: line-through; }
+
+  .task:focus-visible { outline: 2px solid var(--money); outline-offset: 2px; }
+
+  /* ---------- Footer ---------- */
+  .footer-row { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; gap: 12px; flex-wrap: wrap; }
+  .note { font-size: 12.5px; color: var(--ink-muted); margin: 0; }
+
+  .reset-btn {
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    background: transparent;
+    border: 1px solid var(--paper-line);
+    color: var(--ink-muted);
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .reset-btn:hover { border-color: var(--stamp-red); color: var(--stamp-red); }
+
+  @media (max-width: 480px) {
+    .week-count { display: none; }
+    .due-stamp { width: 84px; height: 84px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="cert">
+      <div>
+        <p class="cert-eyebrow">Bitácora oficial de entrenamiento</p>
+        <h1 class="cert-name">DSK</h1>
+        <p class="cert-tagline">Del 20 de junio a la quincena de agosto: todo lo que conviene saber antes de dedicarte de lleno a tu tienda.</p>
+      </div>
+      <div class="due-stamp">
+        <span class="lbl">Vence en</span>
+        <span class="num" id="countdownNum">—</span>
+        <span class="sub">días · 15 ago</span>
+      </div>
+    </div>
+
+    <div class="balance">
+      <div class="balance-top">
+        <span class="balance-label">Balance de progreso</span>
+        <span class="balance-readout" id="readout">0<span> / 24</span></span>
+      </div>
+      <div class="track"><div class="fill" id="fillBar"></div></div>
+      <p class="balance-status" id="gaugeStatus">Cuenta en cero. Todo por aprender.</p>
+    </div>
+
+    <div id="weeks"></div>
+
+    <div class="footer-row">
+      <p class="note">Marca tu avance a modo de guía visual mientras revisas la página.</p>
+      <button class="reset-btn" id="resetBtn">Reiniciar progreso</button>
+    </div>
+  </div>
+
+<script>
+const weeks = [
+  {
+    id: 'w1', number: '01', dates: '20–27 jun', title: 'Fundamentos de ecommerce y dropshipping',
+    tasks: [
+      { id: 'w1t1', text: 'Entender cómo gana dinero realmente una tienda de dropshipping: márgenes, costos ocultos y tiempos de envío.', res: 'Recurso: guía "Fundamentos del comercio electrónico" de Shopify (gratis)' },
+      { id: 'w1t2', text: 'Completar el módulo introductorio del curso gratuito de Google sobre marketing digital y ecommerce.', res: 'Recurso: "Fundamentos de marketing digital y comercio electrónico" (Coursera, gratis)' },
+      { id: 'w1t3', text: 'Definir tus expectativas reales: cuánto tiempo y dinero estás dispuesto a invertir antes de ver resultados.' },
+    ]
+  },
+  {
+    id: 'w2', number: '02', dates: '27 jun–4 jul', title: 'Construir la base en Shopify',
+    tasks: [
+      { id: 'w2t1', text: 'Tomar el curso "Shopify 101" en Shopify Academy.', res: 'Recurso: Shopify Academy, gratis, ~90 min' },
+      { id: 'w2t2', text: 'Activar tu prueba de Shopify y explorar el panel: productos, temas, apps, configuración general.' },
+      { id: 'w2t3', text: 'Practicar personalizando el tema de DSK: colores, menú y página de inicio.' },
+    ]
+  },
+  {
+    id: 'w3', number: '03', dates: '4–11 jul', title: 'Producto y proveedores',
+    tasks: [
+      { id: 'w3t1', text: 'Aprender los criterios para elegir un "producto ganador": demanda, margen, problema que resuelve, tendencia.' },
+      { id: 'w3t2', text: 'Investigar y comparar proveedores (AliExpress, CJ Dropshipping, Zendrop) por tiempos de envío, calidad y reseñas.' },
+      { id: 'w3t3', text: 'Hacer benchmark de 3 tiendas de la competencia en el nicho gaming/tech: qué venden y cómo lo presentan.' },
+    ]
+  },
+  {
+    id: 'w4', number: '04', dates: '11–18 jul', title: 'Páginas de producto que venden',
+    tasks: [
+      { id: 'w4t1', text: 'Aprender a escribir títulos y descripciones orientadas a beneficios, no solo características.' },
+      { id: 'w4t2', text: 'Estudiar qué hace que una página de producto convierta: fotos, reseñas, garantías, preguntas frecuentes.' },
+      { id: 'w4t3', text: 'Armar la ficha completa de un producto real para DSK aplicando lo aprendido.' },
+    ]
+  },
+  {
+    id: 'w5', number: '05', dates: '18–25 jul', title: 'Fundamentos de Meta Ads',
+    tasks: [
+      { id: 'w5t1', text: 'Crear tu cuenta de Meta Business Suite y configurar el Píxel para DSK.' },
+      { id: 'w5t2', text: 'Entender cómo funcionan las campañas Advantage+, el sistema de Meta que automatiza segmentación y entrega de anuncios con IA.' },
+      { id: 'w5t3', text: 'Empezar el curso gratuito de primeros pasos con anuncios en Meta Blueprint.', res: 'Recurso: Meta Blueprint (facebookblueprint.com), gratis y a tu ritmo' },
+    ]
+  },
+  {
+    id: 'w6', number: '06', dates: '25 jul–1 ago', title: 'Creativos y métricas en Meta Ads',
+    tasks: [
+      { id: 'w6t1', text: 'Aprender a leer métricas clave: CTR, CPC, CPA y ROAS, y qué número es razonable para empezar.' },
+      { id: 'w6t2', text: 'Estudiar qué tipo de creativos (video corto, contenido tipo usuario real, antes/después) funcionan mejor en gaming/tech.' },
+      { id: 'w6t3', text: 'Planear un mini presupuesto de prueba (ej. $5–10 al día) para tus primeras campañas.' },
+    ]
+  },
+  {
+    id: 'w7', number: '07', dates: '1–8 ago', title: 'Redes orgánicas y email marketing',
+    tasks: [
+      { id: 'w7t1', text: 'Aprender a crear contenido orgánico en TikTok/Instagram para validar productos sin gastar en ads.' },
+      { id: 'w7t2', text: 'Configurar Shopify Email o Klaviyo para recuperar carritos abandonados.' },
+      { id: 'w7t3', text: 'Planear un calendario simple de publicaciones para las primeras semanas de DSK.' },
+    ]
+  },
+  {
+    id: 'w8', number: '08', dates: '8–15 ago', title: 'Logística, atención al cliente y cierre',
+    tasks: [
+      { id: 'w8t1', text: 'Aprender buenas prácticas de atención al cliente en dropshipping: tiempos de respuesta, manejo de reclamos.' },
+      { id: 'w8t2', text: 'Investigar qué necesitas saber sobre boletas y SUNAT para vender en línea en Perú, antes de facturar tu primera venta.' },
+      { id: 'w8t3', text: 'Repasar tu checklist de lanzamiento y confirmar que estás listo para dedicarte de lleno a DSK.' },
+    ]
+  },
+];
+
+const allTaskIds = weeks.flatMap(w => w.tasks.map(t => t.id));
+let state = {};
+
+const statusMessages = [
+  { min: 0,  text: 'Cuenta en cero. Todo por aprender.' },
+  { min: 1,  text: 'Primeros depósitos de conocimiento.' },
+  { min: 6,  text: 'La base de tu tienda está tomando forma.' },
+  { min: 10, text: 'Catálogo y páginas de producto bajo control.' },
+  { min: 14, text: 'Entrando en territorio de anuncios.' },
+  { min: 18, text: 'Dominando creativos y métricas.' },
+  { min: 21, text: 'Últimos detalles antes del lanzamiento.' },
+  { min: 24, text: 'Cuenta saldada. Listos para agosto.' },
+];
+
+function getStatusText(count) {
+  let msg = statusMessages[0].text;
+  for (const s of statusMessages) if (count >= s.min) msg = s.text;
+  return msg;
+}
+
+function renderBalance(count) {
+  document.getElementById('readout').innerHTML = count + '<span> / 24</span>';
+  document.getElementById('fillBar').style.width = Math.round((count / 24) * 100) + '%';
+  document.getElementById('gaugeStatus').textContent = getStatusText(count);
+}
+
+function countDone() { return allTaskIds.filter(id => state[id]).length; }
+
+function renderWeeks() {
+  const container = document.getElementById('weeks');
+  container.innerHTML = '';
+
+  weeks.forEach(week => {
+    const doneInWeek = week.tasks.filter(t => state[t.id]).length;
+
+    const weekEl = document.createElement('div');
+    weekEl.className = 'week';
+
+    const head = document.createElement('div');
+    head.className = 'week-head';
+    head.innerHTML = `
+      <span class="week-stamp">${week.number}</span>
+      <div class="week-titles">
+        <span class="week-dates">${week.dates}</span>
+        <h2 class="week-title">${week.title}</h2>
+      </div>
+      <span class="week-count">${doneInWeek}/${week.tasks.length}</span>
+    `;
+    weekEl.appendChild(head);
+
+    const list = document.createElement('ul');
+    list.className = 'task-list';
+
+    week.tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = 'task' + (state[task.id] ? ' done' : '');
+      li.tabIndex = 0;
+      li.setAttribute('role', 'checkbox');
+      li.setAttribute('aria-checked', state[task.id] ? 'true' : 'false');
+      li.innerHTML = `
+        <span class="stampbox"></span>
+        <span class="task-body">
+          <span class="task-text">${task.text}</span>
+          ${task.res ? `<span class="task-resource">${task.res}</span>` : ''}
+        </span>
+      `;
+      const toggle = () => {
+        state[task.id] = !state[task.id];
+        li.classList.toggle('done');
+        li.setAttribute('aria-checked', state[task.id] ? 'true' : 'false');
+        renderBalance(countDone());
+        const count = week.tasks.filter(t => state[t.id]).length;
+        head.querySelector('.week-count').textContent = `${count}/${week.tasks.length}`;
+      };
+      li.addEventListener('click', toggle);
+      li.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+      list.appendChild(li);
+    });
+
+    weekEl.appendChild(list);
+    container.appendChild(weekEl);
+  });
+}
+
+function renderCountdown() {
+  const target = new Date('2026-08-15T00:00:00');
+  const now = new Date();
+  const diff = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+  document.getElementById('countdownNum').textContent = diff > 0 ? diff : '0';
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('¿Reiniciar todo el progreso de la bitácora?')) return;
+  state = {};
+  renderBalance(0);
+  renderWeeks();
+});
+
+renderCountdown();
+renderBalance(countDone());
+renderWeeks();
+
+</script>
+</body>
+</html>
